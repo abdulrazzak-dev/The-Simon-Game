@@ -1,24 +1,377 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Simon Game</title>
-<link rel="stylesheet" href="stylesheet.css">
+  <meta charset="UTF-8"> 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simon Nexus // Premium Memory Game</title>
+  
+  <!-- Google Fonts: Outfit (Interface) & Share Tech Mono (Digital Screens) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons for modern, intuitive indicators -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="stylesheet.css">
+  
+  <!-- jQuery CDN -->
+  <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 </head>
-<body>
-<h1>Simon Game</h1>
-<div id="msg">Press any key or button to start</div>
-<div class="board">
-  <div id="green" class="pad green"></div>
-  <div id="red" class="pad red"></div>
-  <div id="yellow" class="pad yellow"></div>
-  <div id="blue" class="pad blue"></div>
-  <div class="center">SIMON</div>
-</div>
-<div class="controls">
-  <button id="startBtn">Start Game</button>
-  <span id="score">Score: 0</span>
-</div>
-<script src="javascripet.js"></script>
+<body class="dark-theme">
+  <!-- Interactive particle canvas for high-score celebration -->
+  <canvas id="particles-canvas"></canvas>
+
+  <div class="app-container">
+    <!-- Header Area -->
+    <header class="app-header">
+      <div class="logo-area">
+        <i class="fa-solid fa-microchip logo-icon"></i>
+        <h1>SIMON <span class="accent-text">NEXUS</span></h1>
+      </div>
+      <div class="header-actions">
+        <button id="keyboardHelpBtn" title="Keyboard Shortcuts" class="icon-btn">
+          <i class="fa-regular fa-keyboard"></i>
+        </button>
+        <button id="themeToggleBtn" title="Toggle Theme (Dark/Light)" class="icon-btn">
+          <i class="fa-solid fa-moon"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Game Grid -->
+    <main class="game-grid">
+      
+      <!-- Left Column: Controls & Game Settings -->
+      <section class="grid-panel panel-left glass-card">
+        <div class="panel-header">
+          <i class="fa-solid fa-sliders"></i>
+          <h2>Game Parameters</h2>
+        </div>
+        
+        <!-- Difficulty Selector -->
+        <div class="control-group">
+          <label class="group-label">Difficulty Mode</label>
+          <div class="difficulty-switch">
+            <button class="diff-btn active" data-difficulty="easy">Easy</button>
+            <button class="diff-btn" data-difficulty="medium">Medium</button>
+            <button class="diff-btn" data-difficulty="hard">Hard</button>
+          </div>
+        </div>
+
+        <!-- Mode Toggles (Strict & Practice) -->
+        <div class="toggles-group">
+          <div class="toggle-control">
+            <div class="toggle-text">
+              <span class="toggle-title">Strict Mode</span>
+              <span class="toggle-desc">One error resets the game</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="strictModeToggle">
+              <span class="slider round"></span>
+            </label>
+          </div>
+
+          <div class="toggle-control">
+            <div class="toggle-text">
+              <span class="toggle-title">Practice Mode</span>
+              <span class="toggle-desc">Allows retries (3 max)</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="practiceModeToggle">
+              <span class="slider round"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Practice Retries Left Display -->
+        <div id="retriesIndicator" class="retries-display hidden">
+          <span class="label">Retries Left:</span>
+          <div class="heart-icons">
+            <i class="fa-solid fa-heart active-heart"></i>
+            <i class="fa-solid fa-heart active-heart"></i>
+            <i class="fa-solid fa-heart active-heart"></i>
+          </div>
+        </div>
+
+        <!-- Game Info / Tips -->
+        <div class="info-card">
+          <div class="info-icon"><i class="fa-solid fa-circle-info"></i></div>
+          <p id="tipsText">Select a difficulty mode, then press Start to play. Strict mode enforces a flawless run!</p>
+        </div>
+      </section>
+
+      <!-- Center Column: Main Game Console -->
+      <section class="grid-panel panel-center">
+        <!-- Dashboard & Progress Indicator -->
+        <div class="dashboard glass-card">
+          <div class="dash-stat">
+            <span class="dash-label">Level</span>
+            <span id="levelDisplay" class="digital-value">01</span>
+          </div>
+          <div class="dash-stat">
+            <span class="dash-label">Score</span>
+            <span id="scoreDisplay" class="digital-value">000</span>
+          </div>
+          <div class="dash-stat">
+            <span class="dash-label">Best</span>
+            <span id="highScoreDisplay" class="digital-value">000</span>
+          </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="progress-container glass-card">
+          <div id="gameProgressBar" class="progress-bar"></div>
+        </div>
+
+        <!-- Simon Board Section -->
+        <div class="board-wrapper">
+          <!-- Central Board -->
+          <div class="simon-board">
+            <div id="green" class="pad green" data-pad="0" role="button" aria-label="Green Pad (Keyboard Q or Arrow Up)"></div>
+            <div id="red" class="pad red" data-pad="1" role="button" aria-label="Red Pad (Keyboard W or Arrow Right)"></div>
+            <div id="yellow" class="pad yellow" data-pad="2" role="button" aria-label="Yellow Pad (Keyboard A or Arrow Left)"></div>
+            <div id="blue" class="pad blue" data-pad="3" role="button" aria-label="Blue Pad (Keyboard S or Arrow Down)"></div>
+            
+            <!-- Central Control hub -->
+            <div class="board-center">
+              <span class="brand">NEXUS</span>
+              <span id="centerStatus" class="status-msg">READY</span>
+            </div>
+          </div>
+
+          <!-- Countdown Overlay inside Board -->
+          <div id="countdownOverlay" class="countdown-overlay hidden">
+            <span id="countdownNumber" class="countdown-num">3</span>
+          </div>
+        </div>
+
+        <!-- Control Action Bar -->
+        <div class="game-actions glass-card">
+          <button id="startGameBtn" class="action-btn primary-action">
+            <i class="fa-solid fa-play"></i> Start Game
+          </button>
+          
+          <button id="pauseGameBtn" class="action-btn secondary-action" disabled>
+            <i class="fa-solid fa-pause"></i> Pause
+          </button>
+
+          <button id="muteToggleBtn" title="Toggle Sound" class="action-btn icon-only-action">
+            <i class="fa-solid fa-volume-high"></i>
+          </button>
+        </div>
+      </section>
+
+      <!-- Right Column: Stats & Leaderboards -->
+      <section class="grid-panel panel-right glass-card">
+        <!-- Badges Display -->
+        <div class="panel-header">
+          <i class="fa-solid fa-award"></i>
+          <h2>Achievements</h2>
+        </div>
+        
+        <div class="badges-grid">
+          <div id="badge-bronze" class="badge-item locked" title="Reach Level 5">
+            <div class="badge-icon bronze"><i class="fa-solid fa-medal"></i></div>
+            <span class="badge-name">Challenger</span>
+            <span class="badge-level">Lvl 5</span>
+          </div>
+          <div id="badge-silver" class="badge-item locked" title="Reach Level 10">
+            <div class="badge-icon silver"><i class="fa-solid fa-trophy"></i></div>
+            <span class="badge-name">Master</span>
+            <span class="badge-level">Lvl 10</span>
+          </div>
+          <div id="badge-gold" class="badge-item locked" title="Reach Level 15">
+            <div class="badge-icon gold"><i class="fa-solid fa-crown"></i></div>
+            <span class="badge-name">Elite</span>
+            <span class="badge-level">Lvl 15</span>
+          </div>
+          <div id="badge-ruby" class="badge-item locked" title="Reach Level 20">
+            <div class="badge-icon ruby"><i class="fa-solid fa-gem"></i></div>
+            <span class="badge-name">Grandmaster</span>
+            <span class="badge-level">Lvl 20</span>
+          </div>
+        </div>
+
+        <!-- Local Leaderboard -->
+        <div class="panel-header section-divider">
+          <i class="fa-solid fa-list-ol"></i>
+          <h2>Local Leaderboard</h2>
+        </div>
+
+        <div class="leaderboard-table-wrapper">
+          <table class="leaderboard-table">
+            <thead>
+              <tr>
+                <th style="width: 15%">Pos</th>
+                <th style="width: 45%">Player</th>
+                <th style="width: 20%">Lvl</th>
+                <th style="width: 20%">Score</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboardBody">
+              <!-- Dynamically populated -->
+              <tr class="empty-row">
+                <td colspan="4">No scores logged yet</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- General Stats -->
+        <div class="panel-header section-divider">
+          <i class="fa-solid fa-chart-simple"></i>
+          <h2>Developer Statistics</h2>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-box">
+            <span class="stat-number" id="statsGamesPlayed">0</span>
+            <span class="stat-label">Games Played</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-number" id="statsAvgScore">0.0</span>
+            <span class="stat-label">Avg Score</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-number" id="statsMaxLevel">0</span>
+            <span class="stat-label">Max Level</span>
+          </div>
+        </div>
+        
+        <div class="stats-actions">
+          <button id="resetStatsBtn" class="danger-btn">
+            <i class="fa-solid fa-trash-can"></i> Reset Leaderboard & Stats
+          </button>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Footer Area -->
+    <footer class="app-footer">
+      <p>Simon Game Portfolio Project &copy; 2026. Made with HTML5, CSS3, ES6 &amp; jQuery.</p>
+    </footer>
+  </div>
+
+  <!-- MODALS -->
+
+  <!-- Modal: Game Over / High Score -->
+  <div id="gameOverModal" class="modal-overlay hidden">
+    <div class="modal-content glass-card">
+      <div id="modalConfettiContainer"></div>
+      <div class="modal-header">
+        <i class="fa-solid fa-triangle-exclamation game-over-icon"></i>
+        <h2 id="modalTitle">Game Over</h2>
+      </div>
+      
+      <!-- Score summary -->
+      <div class="modal-stats">
+        <div class="modal-stat-card">
+          <span class="modal-stat-lbl">Final Score</span>
+          <span id="modalScore" class="modal-stat-val digital-value">000</span>
+        </div>
+        <div class="modal-stat-card">
+          <span class="modal-stat-lbl">Level Reached</span>
+          <span id="modalLevel" class="modal-stat-val digital-value">01</span>
+        </div>
+        <div class="modal-stat-card highlight-card" id="highScoreRecordCard">
+          <span class="modal-stat-lbl">Personal Best</span>
+          <span id="modalBest" class="modal-stat-val digital-value">000</span>
+        </div>
+      </div>
+
+      <!-- High Score Notification Banner -->
+      <div id="highScoreBanner" class="high-score-banner hidden">
+        <i class="fa-solid fa-star animated-star"></i>
+        <span>NEW HIGH SCORE ACHIEVED!</span>
+        <i class="fa-solid fa-star animated-star"></i>
+      </div>
+
+      <!-- Leaderboard Entry Form -->
+      <div id="leaderboardEntryForm" class="leaderboard-entry hidden">
+        <p>You made the top 5! Enter initials to claim your spot:</p>
+        <div class="form-row">
+          <input type="text" id="playerInitials" maxlength="3" placeholder="AAA" autocomplete="off" />
+          <button id="submitScoreBtn">Submit</button>
+        </div>
+      </div>
+
+      <!-- Action buttons -->
+      <div class="modal-actions">
+        <button id="modalPlayAgainBtn" class="action-btn primary-action">
+          <i class="fa-solid fa-rotate-right"></i> Play Again
+        </button>
+        <button id="modalCloseBtn" class="action-btn secondary-action">
+          <i class="fa-solid fa-xmark"></i> Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Keyboard shortcuts / How to Play -->
+  <div id="keyboardHelpModal" class="modal-overlay hidden">
+    <div class="modal-content glass-card">
+      <div class="modal-header">
+        <i class="fa-solid fa-keyboard"></i>
+        <h2>Keyboard Shortcuts & Controls</h2>
+      </div>
+      
+      <div class="modal-body">
+        <p>Simon Nexus supports full keyboard navigation so you can play without a mouse:</p>
+        
+        <table class="shortcuts-table">
+          <thead>
+            <tr>
+              <th>Action</th>
+              <th>Keyboard Binding</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="pad-key green-key">Green Pad</span></td>
+              <td><code>Q</code> or <code>&uarr;</code> (Up Arrow)</td>
+            </tr>
+            <tr>
+              <td><span class="pad-key red-key">Red Pad</span></td>
+              <td><code>W</code> or <code>&rarr;</code> (Right Arrow)</td>
+            </tr>
+            <tr>
+              <td><span class="pad-key yellow-key">Yellow Pad</span></td>
+              <td><code>A</code> or <code>&larr;</code> (Left Arrow)</td>
+            </tr>
+            <tr>
+              <td><span class="pad-key blue-key">Blue Pad</span></td>
+              <td><code>S</code> or <code>&darr;</code> (Down Arrow)</td>
+            </tr>
+            <tr>
+              <td>Start Game</td>
+              <td><code>Enter</code> or <code>Space</code></td>
+            </tr>
+            <tr>
+              <td>Pause / Resume</td>
+              <td><code>P</code></td>
+            </tr>
+            <tr>
+              <td>Mute / Unmute</td>
+              <td><code>M</code></td>
+            </tr>
+            <tr>
+              <td>Switch Theme</td>
+              <td><code>T</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="modal-actions">
+        <button id="closeHelpBtn" class="action-btn primary-action">Got It</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Core JavaScript -->
+  <script src="app.js"></script>
 </body>
 </html>
